@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Real Car Dodge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:black;
+  overflow:hidden;
+  font-family:Arial;
+  color:white;
+}
+
+#score{
+  position:fixed;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:20px;
+  z-index:10;
+}
+
+#road{
+  width:100vw;
+  height:100vh;
+  background:#2c2c2c;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Road lines */
+.line{
+  position:absolute;
+  width:10px;
+  height:60px;
+  background:white;
+  left:50%;
+  transform:translateX(-50%);
+  opacity:0.7;
+}
+
+/* Player car */
+#player{
+  width:55px;
+  height:100px;
+  background:linear-gradient(red, darkred);
+  position:absolute;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  border-radius:10px;
+  box-shadow:0 0 15px red;
+}
+
+/* Enemy car */
+.enemy{
+  width:55px;
+  height:100px;
+  background:linear-gradient(#ffeb3b,#f57f17);
+  position:absolute;
+  top:-120px;
+  border-radius:10px;
+  box-shadow:0 0 15px yellow;
+}
+
+#startBtn{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:12px 30px;
+  font-size:18px;
+  border:none;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="score">Score: 0</div>
+<div id="road">
+  <div id="player"></div>
+</div>
+
+<button id="startBtn" onclick="startGame()">START</button>
+
+<script>
+let road = document.getElementById("road");
+let player = document.getElementById("player");
+let scoreText = document.getElementById("score");
+let startBtn = document.getElementById("startBtn");
+
+let score = 0;
+let speed = 4;
+let gameRunning = false;
+let touchX = null;
+
+/* Touch control */
+road.addEventListener("touchstart", e=>{
+  touchX = e.touches[0].clientX;
+});
+road.addEventListener("touchmove", e=>{
+  let newX = e.touches[0].clientX;
+  let diff = newX - touchX;
+  player.style.left = player.offsetLeft + diff + "px";
+  touchX = newX;
+});
+
+/* Create road lines */
+function createLines(){
+  for(let i=0;i<15;i++){
+    let line=document.createElement("div");
+    line.className="line";
+    line.style.top=(i*80)+"px";
+    road.appendChild(line);
+  }
+}
+
+/* Move lines */
+function moveLines(){
+  let lines=document.querySelectorAll(".line");
+  lines.forEach(line=>{
+    let top=line.offsetTop;
+    line.style.top = top + speed + "px";
+    if(top>window.innerHeight){
+      line.style.top="-60px";
+    }
+  });
+}
+
+/* Enemy */
+function createEnemy(){
+  let enemy=document.createElement("div");
+  enemy.className="enemy";
+  enemy.style.left = Math.random()*(window.innerWidth-60)+"px";
+  road.appendChild(enemy);
+
+  let move=setInterval(()=>{
+    if(!gameRunning){clearInterval(move);return;}
+    enemy.style.top = enemy.offsetTop + speed + "px";
+
+    if(enemy.offsetTop>window.innerHeight){
+      enemy.remove();
+      score++;
+      scoreText.innerText="Score: "+score;
+      speed+=0.2;
+      clearInterval(move);
+    }
+
+    if(
+      enemy.offsetTop+100>player.offsetTop &&
+      enemy.offsetLeft<player.offsetLeft+55 &&
+      enemy.offsetLeft+55>player.offsetLeft
+    ){
+      gameOver();
+      clearInterval(move);
+    }
+  },20);
+}
+
+/* Game loop */
+function gameLoop(){
+  if(!gameRunning) return;
+  moveLines();
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame(){
+  startBtn.style.display="none";
+  score=0;
+  speed=4;
+  gameRunning=true;
+  scoreText.innerText="Score: 0";
+  road.innerHTML='<div id="player"></div>';
+  player=document.getElementById("player");
+  createLines();
+  gameLoop();
+  enemyTimer=setInterval(createEnemy,1200);
+}
+
+function gameOver(){
+  gameRunning=false;
+  alert("🚗 GAME OVER\nScore: "+score);
+  location.reload();
+}
+</script>
+
+</body>
+  </html>
